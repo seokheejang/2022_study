@@ -69,7 +69,6 @@ const generateRSAKeyPair = async (name, email, pass) => {
     }
 }
 
-
 module.exports = {
     generateECCKeyPair,
     generateRSAKeyPair,

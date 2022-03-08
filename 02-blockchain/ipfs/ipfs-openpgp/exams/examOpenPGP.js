@@ -4,8 +4,8 @@ const {
     exportFile, 
     importFile } = require('../libs/libOpenPGPKeyFile.js');
 const { 
-    readPublicKey,
-    readPriavteKey,
+    getPublicKey,
+    getPriavteKey,
     fileEncrypt,
     fileDecrypt } = require('../libs/libOpenPGPGeneral.js');
 
@@ -70,8 +70,8 @@ const proc_decryptFile = async () => {
         const publicKeyArmored = await importFile('ECC_PublicKeyArmor.key');
         const privateKeyArmored  = await importFile('ECC_PrivateKeyArmor.key');
         const pass = 'jang123';  // test data : jang123
-        const publicKey = await readPublicKey(publicKeyArmored);
-        const privateKey = await readPriavteKey(privateKeyArmored, pass);
+        const publicKey = await getPublicKey(publicKeyArmored);
+        const privateKey = await getPriavteKey(privateKeyArmored, pass);
         const encrypted = await importFile(file); 
         const result = await fileDecrypt(publicKey, privateKey, encrypted);
         console.log(result);

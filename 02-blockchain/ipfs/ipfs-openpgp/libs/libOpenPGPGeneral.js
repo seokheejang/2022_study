@@ -1,10 +1,10 @@
 const openpgp = require('openpgp');
 
-const readPublicKey = async (publicKeyArmored) => {
+const getPublicKey = async (publicKeyArmored) => {
     return await openpgp.readKey({ armoredKey: publicKeyArmored });
 }
 
-const readPriavteKey = async (privateKeyArmored, passphrase) => {
+const getPriavteKey = async (privateKeyArmored, passphrase) => {
     return await openpgp.decryptKey({
         privateKey: await openpgp.readPrivateKey({ armoredKey: privateKeyArmored }),
         passphrase
@@ -13,8 +13,8 @@ const readPriavteKey = async (privateKeyArmored, passphrase) => {
 
 const fileEncrypt = async (publicKeyArmored, privateKeyArmored, passphrase, message) => {
     try {
-        const publicKey = await readPublicKey(publicKeyArmored);
-        const privateKey = await readPriavteKey(privateKeyArmored, passphrase);
+        const publicKey = await getPublicKey(publicKeyArmored);
+        const privateKey = await getPriavteKey(privateKeyArmored, passphrase);
         const encrypted = await openpgp.encrypt({
             message: await openpgp.createMessage({ text: message }), // input as Message object
             encryptionKeys: publicKey,
@@ -51,8 +51,8 @@ const fileDecrypt = async (publicKey, privateKey, encrypted) => {
 }
 
 module.exports = {
-    readPublicKey,
-    readPriavteKey,
+    getPublicKey,
+    getPriavteKey,
     fileEncrypt,
     fileDecrypt
 }

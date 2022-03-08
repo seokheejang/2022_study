@@ -1,0 +1,12 @@
+{
+    "main": {
+        "host": "ipfs.infura.io",
+        "port": "5001",
+        "protocol": "https"
+    },
+    "private": {
+        "host": "141.164.52.45",
+        "port": "5001",
+        "protocol": "http"
+    }
+}
