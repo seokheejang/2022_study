@@ -1,0 +1,11 @@
+{
+  "name": "background_v1",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "shjang",
+  "license": "MIT",
+  "dependencies": {
+    "eth-keyring-controller": "^7.0.2",
+    "typescript": "^4.7.3"
+  }
+}
