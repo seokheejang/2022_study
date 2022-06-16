@@ -6,14 +6,14 @@ declare module 'eth-keyring-controller' {
             isUnlocked: boolean;
             keyringTypes: Array<string>;
             keyrings: any;
-        }        
+        } 
     }
 
     interface initConfig {
-        keyringTypes: any;
-        initState: any;
-        encryptor: any;
-    }    
+        keyringTypes?: any;
+        initState?: any;
+        encryptor?: any;
+    }
 
     export default class KeyringController {
     
@@ -45,17 +45,17 @@ declare module 'eth-keyring-controller' {
     
         fullUpdate(): any;
     
-        getAccounts(): string;
+        getAccounts(): any;
     
         getAppKeyAddress(...args: any[]): void;
     
         getEncryptionPublicKey(...args: any[]): void;
     
-        getKeyringClassForType(...args: any[]): void;
+        getKeyringClassForType(...args: any[]): any;
     
         getKeyringForAccount(...args: any[]): void;
     
-        getKeyringsByType(...args: any[]): void;
+        getKeyringsByType(...args: any[]): any;
     
         persistAllKeyrings(...args: any[]): void;
     
