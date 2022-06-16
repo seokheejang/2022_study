@@ -1,3 +1,4 @@
+//import { KeyringController, Vault } from 'eth-keyring-controller';
 import KeyringController from 'eth-keyring-controller';
 
 export async function initialize() {
@@ -10,36 +11,38 @@ async function setupController() {
         console.log("background: setupController");
         
         const password = '1234';
-        /**
-         * @TODO Promise type
-         */
         const encryptor = {
-            encrypt(password: string, object: unknown): Promise<string> {
-                return new Promise('encrypted!');
+            encrypt(): Promise<string> {
+                return Promise.resolve('encrypted!');
               },
-            decrypt(password: string, encryptedString: string) {
-                return new Promise({ foo: 'bar' });
+            decrypt() {
+                return Promise.resolve({ foo: 'bar' });
             },
         }
 
-        const keyringObj: KeyringController = new KeyringController({
+        console.log("KeyringController", typeof KeyringController, KeyringController);
+
+        const keyringObj = new KeyringController({ 
             keyringTypes: '',
             initState: {},
-            encryptor: undefined,
+            encryptor: encryptor,
         });
         console.log("keyringObj", keyringObj);
     
-        let vault: unknown;
-    
+        let vault: Vault;
+
         const accounts: string = await keyringObj.getAccounts();
         console.log("account", accounts);
         if (accounts.length > 0) {
             vault = await keyringObj.fullUpdate();
         } else {
             vault = await keyringObj.createNewVaultAndKeychain(password);
+            console.log(`accounts.length[${accounts.length}], createNewVaultAndKeychain flow`);
         }
         
         console.log("vault", vault);
+        console.log("vault.keyrings.accounts", vault.keyrings[0].accounts);
+        
     } catch (e) {
         console.log('setupController:', e);
     }
