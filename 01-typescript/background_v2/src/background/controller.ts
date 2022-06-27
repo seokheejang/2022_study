@@ -53,9 +53,7 @@ interface MetamaskControllerOptions {
 export default class MetamaskController extends EventEmitter {
   private readonly defaultMaxListeners;
 
-  private sendUpdate;
-
-  private privateSendUpdate: any;
+  private sendUpdate: any;
 
   private opts: MetamaskControllerOptions;
 
@@ -74,6 +72,8 @@ export default class MetamaskController extends EventEmitter {
   private controllerMessenger: any;
 
   private store;
+
+  private memStore;
 
   private connections: any;
 
@@ -174,11 +174,10 @@ export default class MetamaskController extends EventEmitter {
 
     const getIdentities = () => {
       /** 
-       * @TODO 
+       * @TODO PreferencesController
        */
       //this.preferencesController.store.getState().identities;
     }
-      
 
     this.permissionController = new PermissionController({
       messenger: this.controllerMessenger.getRestricted({
@@ -230,6 +229,50 @@ export default class MetamaskController extends EventEmitter {
     },
     unrestrictedMethods,
     });
+
+    this.memStore = new ComposableObservableStore({
+      config: {
+        // AppStateController: this.appStateController.store,
+        // NetworkController: this.networkController.store,
+        // AccountTracker: this.accountTracker.store,
+        // TxController: this.txController.memStore,
+        // CachedBalancesController: this.cachedBalancesController.store,
+        // TokenRatesController: this.tokenRatesController,
+        // MessageManager: this.messageManager.memStore,
+        // PersonalMessageManager: this.personalMessageManager.memStore,
+        // DecryptMessageManager: this.decryptMessageManager.memStore,
+        // EncryptionPublicKeyManager: this.encryptionPublicKeyManager.memStore,
+        // TypesMessageManager: this.typedMessageManager.memStore,
+        KeyringController: this.keyringController.memStore,
+        // PreferencesController: this.preferencesController.store,
+        // MetaMetricsController: this.metaMetricsController.store,
+        // AddressBookController: this.addressBookController,
+        // CurrencyController: this.currencyRateController,
+        // AlertController: this.alertController.store,
+        // OnboardingController: this.onboardingController.store,
+        // IncomingTransactionsController: this.incomingTransactionsController
+        //   .store,
+        PermissionController: this.permissionController,
+        // PermissionLogController: this.permissionLogController.store,
+        // SubjectMetadataController: this.subjectMetadataController,
+        // ThreeBoxController: this.threeBoxController.store,
+        // SwapsController: this.swapsController.store,
+        // EnsController: this.ensController.store,
+        ApprovalController: this.approvalController,
+        // AnnouncementController: this.announcementController,
+        // GasFeeController: this.gasFeeController,
+        // TokenListController: this.tokenListController,
+        // TokensController: this.tokensController,
+        // SmartTransactionsController: this.smartTransactionsController,
+        // CollectiblesController: this.collectiblesController,
+        // ///: BEGIN:ONLY_INCLUDE_IN(flask)
+        // SnapController: this.snapController,
+        // NotificationController: this.notificationController,
+        // ///: END:ONLY_INCLUDE_IN
+      },
+      controllerMessenger: this.controllerMessenger,
+    });
+    this.memStore.subscribe(this.sendUpdate.bind(this));
   }
 
   ///: BEGIN:ONLY_INCLUDE_IN(flask)
@@ -322,7 +365,7 @@ export default class MetamaskController extends EventEmitter {
    * @returns {Promise<string[]>} The origin's permitted accounts, or an empty
    * array.
    */
-   async getPermittedAccounts(
+  async getPermittedAccounts(
     origin: any,
     { suppressUnauthorizedError = true } = {},
   ) {
@@ -340,17 +383,6 @@ export default class MetamaskController extends EventEmitter {
       }
       throw error;
     }
-  }
-
-  /**
-   * Gets the mnemonic of the user's primary keyring.
-   */
-  getPrimaryKeyringMnemonic() {
-    const keyring = this.keyringController.getKeyringsByType('HD Key Tree')[0];
-    if (!keyring.mnemonic) {
-      throw new Error('Primary keyring mnemonic unavailable.');
-    }
-    return keyring.mnemonic;
   }
 
   /**
@@ -461,5 +493,190 @@ export default class MetamaskController extends EventEmitter {
   //     params: this.getProviderNetworkState(newState),
   //   });
   // }
+
+  //=============================================================================
+  // EXPOSED TO THE UI SUBSYSTEM
+  //=============================================================================
+
+  /**
+   * The metamask-state of the various controllers, made available to the UI
+   *
+   * @returns {Object} status
+   */
+  getState() {
+    const { vault } = this.keyringController.store.getState();
+    const isInitialized = Boolean(vault);
+
+    return {
+      isInitialized,
+      ...this.memStore.getFlatState(),
+    };
+  }
+
+  /**
+   * A method for emitting the full MetaMask state to all registered listeners.
+   *
+   * @private
+   */
+  privateSendUpdate() {
+    this.emit('update', this.getState());
+  }
+
+  /**
+   * @returns {boolean} Whether the extension is unlocked.
+   */
+  isUnlocked() {
+    return this.keyringController.memStore.getState().isUnlocked;
+  }
+  
+  //=============================================================================
+  // VAULT / KEYRING RELATED METHODS
+  //=============================================================================
+
+  /**
+   * Creates a new Vault and create a new keychain.
+   *
+   * A vault, or KeyringController, is a controller that contains
+   * many different account strategies, currently called Keyrings.
+   * Creating it new means wiping all previous keyrings.
+   *
+   * A keychain, or keyring, controls many accounts with a single backup and signing strategy.
+   * For example, a mnemonic phrase can generate many accounts, and is a keyring.
+   *
+   * @param {string} password
+   * @returns {Object} vault
+   */
+  async createNewVaultAndKeychain(password: string) {
+    const releaseLock = await this.createVaultMutex.acquire();
+    try {
+      let vault;
+      const accounts = await this.keyringController.getAccounts();
+      if (accounts.length > 0) {
+        vault = await this.keyringController.fullUpdate();
+      } else {
+        vault = await this.keyringController.createNewVaultAndKeychain(
+          password,
+        );
+        const addresses = await this.keyringController.getAccounts();
+        //this.preferencesController.setAddresses(addresses);
+        //this.selectFirstIdentity();
+      }
+
+      return vault;
+    } finally {
+      releaseLock();
+    }
+  }
+
+  /**
+   * Create a new Vault and restore an existent keyring.
+   *
+   * @param {string} password
+   * @param {number[]} encodedSeedPhrase - The seed phrase, encoded as an array
+   * of UTF-8 bytes.
+   */
+  async createNewVaultAndRestore(password: string, encodedSeedPhrase: number[]) {
+    const releaseLock = await this.createVaultMutex.acquire();
+    try {
+      let accounts, lastBalance;
+
+      const seedPhraseAsBuffer = Buffer.from(encodedSeedPhrase);
+
+      const { keyringController } = this;
+
+      // clear known identities
+      // this.preferencesController.setAddresses([]);
+
+      // clear permissions
+      this.permissionController.clearState();
+
+      // clear accounts in accountTracker
+      // this.accountTracker.clearAccounts();
+
+      // clear cachedBalances
+      // this.cachedBalancesController.clearCachedBalances();
+
+      // clear unapproved transactions
+      // this.txController.txStateManager.clearUnapprovedTxs();
+
+      // create new vault
+      const vault = await keyringController.createNewVaultAndRestore(
+        password,
+        seedPhraseAsBuffer,
+      );
+
+      // const ethQuery = new EthQuery(this.provider);
+      // accounts = await keyringController.getAccounts();
+      // lastBalance = await this.getBalance(
+      //   accounts[accounts.length - 1],
+      //   ethQuery,
+      // );
+
+      const primaryKeyring = keyringController.getKeyringsByType(
+        'HD Key Tree',
+      )[0];
+      if (!primaryKeyring) {
+        throw new Error('MetamaskController - No HD Key Tree found');
+      }
+
+      // seek out the first zero balance
+      // while (lastBalance !== '0x0') {
+      //   await keyringController.addNewAccount(primaryKeyring);
+      //   accounts = await keyringController.getAccounts();
+      //   lastBalance = await this.getBalance(
+      //     accounts[accounts.length - 1],
+      //     ethQuery,
+      //   );
+      // }
+
+      // remove extra zero balance account potentially created from seeking ahead
+      // if (accounts.length > 1 && lastBalance === '0x0') {
+      //   await this.removeAccount(accounts[accounts.length - 1]);
+      //   accounts = await keyringController.getAccounts();
+      // }
+
+      // This must be set as soon as possible to communicate to the
+      // keyring's iframe and have the setting initialized properly
+      // Optimistically called to not block MetaMask login due to
+      // Ledger Keyring GitHub downtime
+      // const transportPreference = this.preferencesController.getLedgerTransportPreference();
+      // this.setLedgerTransportPreference(transportPreference);
+
+      // set new identities
+      // this.preferencesController.setAddresses(accounts);
+      // this.selectFirstIdentity();
+      return vault;
+    } finally {
+      releaseLock();
+    }
+  }
+
+  /**
+   * @type Identity
+   * @property {string} name - The account nickname.
+   * @property {string} address - The account's ethereum address, in lower case.
+   * @property {boolean} mayBeFauceting - Whether this account is currently
+   * receiving funds from our automatic Ropsten faucet.
+   */
+
+  // /**
+  //  * Sets the first address in the state to the selected address
+  //  */
+  // selectFirstIdentity() {
+  //   const { identities } = this.preferencesController.store.getState();
+  //   const address = Object.keys(identities)[0];
+  //   this.preferencesController.setSelectedAddress(address);
+  // }
+
+  /**
+   * Gets the mnemonic of the user's primary keyring.
+   */
+  getPrimaryKeyringMnemonic() {
+    const keyring = this.keyringController.getKeyringsByType('HD Key Tree')[0];
+    if (!keyring.mnemonic) {
+      throw new Error('Primary keyring mnemonic unavailable.');
+    }
+    return keyring.mnemonic;
+  }
 
 }

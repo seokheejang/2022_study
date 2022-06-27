@@ -8,8 +8,8 @@ import { getPersistentState } from '@metamask/controllers';
 interface ComposableObservableStoreOptions {
   config: any;
   controllerMessenger: any;
-  state: any;
-  persist: any;
+  state?: any;
+  persist?: any;
 }
 
 /**
