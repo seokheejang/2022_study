@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "typeRoots": ["@types", "./node_modules/@types"],
+    "declaration": true,
+    "esModuleInterop": true,
+    "inlineSources": true,
+    "lib": ["DOM", "ES2020"],
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": "dist",
+    "sourceMap": true,
+    "strict": true,
+    "target": "ES2017",
+  },
+  "include": ["src"]
+}

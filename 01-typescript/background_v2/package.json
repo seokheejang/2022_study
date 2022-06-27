@@ -1,0 +1,25 @@
+{
+  "name": "background_v2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@metamask/controllers": "^30.0.2",
+    "@metamask/obs-store": "^7.0.0",
+    "@metamask/rpc-methods": "^0.16.0",
+    "@metamask/snap-controllers": "^0.16.0",
+    "async-mutex": "^0.3.2",
+    "eth-keyring-controller": "^7.0.2",
+    "eth-rpc-errors": "^4.0.3",
+    "ts-debounce": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  }
+}

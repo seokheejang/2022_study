@@ -1,0 +1,1 @@
+import KeyringController from 'eth-keyring-controller';
