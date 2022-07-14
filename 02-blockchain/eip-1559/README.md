@@ -26,25 +26,22 @@
 
 기존 GasPrice가 (baseFee + PriorityFee)로 분할
 
-**baseFee (base fee)**
+## EIP-1559 용어 정리
+
+### **baseFee (base fee)**
 
 이전 블록의 공간 활용도에 따라 이더리움 core에서 자동으로 조정
-
 사용률이 50%를 초과하면 현재 블록의 baseFee가 증가, 그렇지 않으면 감소
-
 2022/7/14 문서 작성 기준 baseFee: 16 ~ 27
-
 baseFee는 Miner에게 가지않고, 이더리움 네트워크에서 완전히 사라짐…(소각)
 
-**PriorityFee (tip)**
+### **PriorityFee (tip)**
 
 기존 GasPrice의 입찰 원리를 활용하는 miner를 위한 TIP.
-
-트랜잭선이 가능한 빨리 블록에 넣고 싶다면 priorityFee를 높게 설정할 수 있다.
-
+트랜잭선이 가능한 빨리 블록에 넣고 싶다면 priorityFee를 높게 설정할 수 있다
 동시에 사용자는 maxPriorityFee라고 불리는 팁의 상한선(최대값)을 설정할 수도 있다.
 
-**maxFee (maximum fee)**
+### **maxFee (maximum fee)**
 
 사용자가 트랜잭션에 대해 지불할 의사기 있는 가장 높은 거래 수수료를 나타냄
 
